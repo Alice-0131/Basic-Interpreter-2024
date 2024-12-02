@@ -12,6 +12,7 @@
 #include <vector>
 #include <set>
 #include <unordered_map>
+#include <map>
 #include "statement.hpp"
 
 
@@ -147,6 +148,8 @@ private:
 
     // Fill this in with whatever types and instance variables you need
     //todo
+    std::map<int, std::string> source_line;
+    std::map<int, Statement*> parsed_statement;
 };
 
 #endif
