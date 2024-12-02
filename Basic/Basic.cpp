@@ -58,5 +58,50 @@ void processLine(std::string line, Program &program, EvalState &state) {
     scanner.setInput(line);
 
     //todo
+    std::string token = scanner.nextToken();
+    if (scanner.getTokenType(token) == NUMBER) { // a program line
+        int lineNumber = stringToInteger(token);
+        if (scanner.hasMoreTokens()) {
+            program.addSourceLine(lineNumber, line);
+        } else {
+            program.removeSourceLine(lineNumber);
+        }
+    } else { // BASIC command
+        if (token == "RUN") {
+            int current = program.getFirstLineNumber();
+            while (current != -1) {
+
+            }
+        } else if (token == "LIST") {
+            int current = program.getFirstLineNumber();
+            while (current!= -1) {
+                std::cout << program.getSourceLine(current) << std::endl;
+                current = program.getNextLineNumber(current);
+            }
+        } else if (token == "CLEAR") {
+            program.clear();
+        } else if (token == "QUIT") {
+            exit(0);
+        } else if (token == "HELP") {
+
+        } else if (token == "LET") {
+            std::string var = scanner.nextToken();
+            scanner.nextToken();
+            if (var == "LET") {
+                throw ErrorException("SYNTAX ERROR");
+            }
+        } else if (token == "INPUT") {
+            std::string var;
+            std::cin >> var;
+
+        } else if (token == "PRINT") {
+            //PrintStmt print_stmt;
+            Expression* exp = parseExp(scanner);
+            int value = exp->eval(state);
+            std::cout << value << std::endl;
+        } else {
+            throw ErrorException("SYNTAX ERROR");
+        }
+    }
 }
 
