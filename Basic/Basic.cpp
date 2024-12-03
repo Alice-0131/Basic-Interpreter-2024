@@ -80,25 +80,55 @@ void processLine(std::string line, Program &program, EvalState &state) {
             }
         } else if (token == "CLEAR") {
             program.clear();
+            state.Clear();
         } else if (token == "QUIT") {
             exit(0);
-        } else if (token == "HELP") {
-
         } else if (token == "LET") {
             std::string var = scanner.nextToken();
             scanner.nextToken();
             if (var == "LET") {
                 throw ErrorException("SYNTAX ERROR");
+            } else {
+                Expression* exp = parseExp(scanner);
+                try {
+                    LetStmt let_stmt(exp -> eval(state), var);
+                    let_stmt.execute(state, program);
+                    delete exp;
+                }
+                catch (ErrorException &ex) {
+                    delete exp;
+                    throw;
+                }
             }
         } else if (token == "INPUT") {
-            std::string var;
-            std::cin >> var;
+            std::string var = scanner.nextToken();
+            std::cout << " ? ";
+            std::string val;
+            while (true) {
+                try {
+                    getline(std::cin, val);
+                    int num = stringToInteger(val);
+                    InputStmt input_stmt(var, num);
+                    input_stmt.execute(state, program);
+                    break;
 
+                }
+                catch(ErrorException &ex) {
+                    std::cout << "INVALID NUMBER\n ? ";
+                }
+            }
         } else if (token == "PRINT") {
-            //PrintStmt print_stmt;
             Expression* exp = parseExp(scanner);
-            int value = exp->eval(state);
-            std::cout << value << std::endl;
+            try {
+                PrintStmt print_stmt(exp->eval(state));
+                print_stmt.execute(state, program);
+                delete exp;
+            }
+            catch (ErrorException &ex) {
+                delete exp;
+                throw;
+            }
+
         } else {
             throw ErrorException("SYNTAX ERROR");
         }
