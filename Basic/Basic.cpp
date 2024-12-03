@@ -74,21 +74,14 @@ void processLine(std::string line, Program &program, EvalState &state) {
                 scanner.nextToken();
                 std::string command = scanner.nextToken();
                 if (command == "LET") {
-                    std::string var = scanner.nextToken();
-                    scanner.nextToken();
-                    if (var == "LET") {
-                        throw ErrorException("SYNTAX ERROR");
-                    } else {
-                        Expression* exp = parseExp(scanner);
-                        try {
-                            LetStmt let_stmt(exp -> eval(state), var);
-                            let_stmt.execute(state, program);
-                            delete exp;
-                        }
-                        catch (ErrorException &ex) {
-                            delete exp;
-                            throw;
-                        }
+                    Expression* exp = parseExp(scanner);
+                    try {
+                        exp -> eval(state);
+                        delete exp;
+                    }
+                    catch (ErrorException &ex) {
+                        delete exp;
+                        throw;
                     }
                 } else if (command == "PRINT") {
                     Expression* exp = parseExp(scanner);
@@ -129,12 +122,65 @@ void processLine(std::string line, Program &program, EvalState &state) {
                         current = next;
                     }
                 } else if (command == "IF") {
-
+                    std::string exp = scanner.nextToken();
+                    std::string tmp;
+                    std::string op;
+                    bool flag = false;
+                    while (scanner.hasMoreTokens()) {
+                        tmp = scanner.nextToken();
+                        if (tmp == "=" || tmp == ">" || tmp == "<") {
+                            op = tmp;
+                            break;
+                        } else {
+                            exp += tmp;
+                        }
+                    }
+                    TokenScanner exp_scanner;
+                    exp_scanner.ignoreWhitespace();
+                    exp_scanner.scanNumbers();
+                    exp_scanner.setInput(exp);
+                    Expression* lhs = parseExp(exp_scanner);
+                    exp.clear();
+                    while (scanner.hasMoreTokens()) {
+                        tmp = scanner.nextToken();
+                        if (tmp == "THEN") {
+                            break;
+                        } else {
+                            exp += tmp;
+                        }
+                    }
+                    exp_scanner.setInput(exp);
+                    Expression* rhs = parseExp(exp_scanner);
+                    if (op == "=") {
+                        if (lhs -> eval(state) == rhs -> eval(state)) {
+                            flag = true;
+                        }
+                    } else if (op == "<") {
+                        if (lhs -> eval(state) < rhs -> eval(state)) {
+                            flag = true;
+                        }
+                    } else if (op == ">") {
+                        if (lhs -> eval(state) > rhs -> eval(state)) {
+                            flag = true;
+                        }
+                    }
+                    if (flag) {
+                        int next = stringToInteger(scanner.nextToken());
+                        if (program.getSourceLine(next).empty()) {
+                            std::cout << "LINE NUMBER ERROR\n";
+                            current = program.getNextLineNumber(current);
+                        } else {
+                            current = next;
+                        }
+                    } else {
+                        current = program.getNextLineNumber(current);
+                    }
+                    delete lhs;
+                    delete rhs;
                 }
-                if (command != "GOTO") {
+                if (command != "GOTO" && command != "IF") {
                     current = program.getNextLineNumber(current);
                 }
-
             }
         } else if (token == "LIST") {
             int current = program.getFirstLineNumber();
@@ -148,21 +194,14 @@ void processLine(std::string line, Program &program, EvalState &state) {
         } else if (token == "QUIT") {
             exit(0);
         } else if (token == "LET") {
-            std::string var = scanner.nextToken();
-            scanner.nextToken();
-            if (var == "LET") {
-                throw ErrorException("SYNTAX ERROR");
-            } else {
-                Expression* exp = parseExp(scanner);
-                try {
-                    LetStmt let_stmt(exp -> eval(state), var);
-                    let_stmt.execute(state, program);
-                    delete exp;
-                }
-                catch (ErrorException &ex) {
-                    delete exp;
-                    throw;
-                }
+            Expression* exp = parseExp(scanner);
+            try {
+                exp -> eval(state);
+                delete exp;
+            }
+            catch (ErrorException &ex) {
+                delete exp;
+                throw;
             }
         } else if (token == "INPUT") {
             std::string var = scanner.nextToken();
