@@ -70,6 +70,70 @@ void processLine(std::string line, Program &program, EvalState &state) {
         if (token == "RUN") {
             int current = program.getFirstLineNumber();
             while (current != -1) {
+                scanner.setInput(program.getSourceLine(current));
+                scanner.nextToken();
+                std::string command = scanner.nextToken();
+                if (command == "LET") {
+                    std::string var = scanner.nextToken();
+                    scanner.nextToken();
+                    if (var == "LET") {
+                        throw ErrorException("SYNTAX ERROR");
+                    } else {
+                        Expression* exp = parseExp(scanner);
+                        try {
+                            LetStmt let_stmt(exp -> eval(state), var);
+                            let_stmt.execute(state, program);
+                            delete exp;
+                        }
+                        catch (ErrorException &ex) {
+                            delete exp;
+                            throw;
+                        }
+                    }
+                } else if (command == "PRINT") {
+                    Expression* exp = parseExp(scanner);
+                    try {
+                        PrintStmt print_stmt(exp->eval(state));
+                        print_stmt.execute(state, program);
+                        delete exp;
+                    }
+                    catch (ErrorException &ex) {
+                        delete exp;
+                        throw;
+                    }
+                } else if (command == "INPUT") {
+                    std::string var = scanner.nextToken();
+                    std::cout << " ? ";
+                    std::string val;
+                    while (true) {
+                        try {
+                            getline(std::cin, val);
+                            int num = stringToInteger(val);
+                            InputStmt input_stmt(var, num);
+                            input_stmt.execute(state, program);
+                            break;
+
+                        }
+                        catch(ErrorException &ex) {
+                            std::cout << "INVALID NUMBER\n ? ";
+                        }
+                    }
+                } else if (command == "END") {
+                    break;
+                } else if (command == "GOTO") {
+                    int next = stringToInteger(scanner.nextToken());
+                    if (program.getSourceLine(next).empty()) {
+                        std::cout << "LINE NUMBER ERROR\n";
+                        current = program.getNextLineNumber(current);
+                    } else {
+                        current = next;
+                    }
+                } else if (command == "IF") {
+
+                }
+                if (command != "GOTO") {
+                    current = program.getNextLineNumber(current);
+                }
 
             }
         } else if (token == "LIST") {
@@ -128,7 +192,6 @@ void processLine(std::string line, Program &program, EvalState &state) {
                 delete exp;
                 throw;
             }
-
         } else {
             throw ErrorException("SYNTAX ERROR");
         }
