@@ -85,4 +85,54 @@ public:
  * specify its own destructor method to free that memory.
  */
 
+class RenStmt : public Statement {
+public:
+ RenStmt();
+ void execute(EvalState &state, Program &program) override;
+};
+
+class LetStmt : public Statement {
+public:
+ LetStmt(int val, std::string var);
+ void execute(EvalState &state, Program &program) override;
+private:
+ int val;
+ std::string var;
+};
+
+class PrintStmt : public Statement {
+public:
+ explicit PrintStmt(int val);
+ void execute(EvalState &state, Program &program) override;
+private:
+ int val;
+};
+
+class InputStmt : public Statement {
+public:
+ InputStmt(std::string var, int val);
+ void execute(EvalState &state, Program &program) override;
+private:
+ std::string var;
+ int val;
+};
+
+class EndStmt : public Statement {
+public:
+ EndStmt();
+ void execute(EvalState &state, Program &program) override;
+};
+
+class GotoStmt : public Statement {
+public:
+ GotoStmt();
+ void execute(EvalState &state, Program &program) override;
+};
+
+class IfStmt : public Statement {
+public:
+ IfStmt();
+ void execute(EvalState &state, Program &program) override;
+};
+
 #endif
